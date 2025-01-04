@@ -6,49 +6,58 @@ interface SelectOption {
 }
 
 interface SelectProps {
+  id: string;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
-  placeholder?: string;
   className?: string;
-  id?: string;
-  name?: string;
 }
 
 const Select: React.FC<SelectProps> = ({
+  id,
   value,
   onChange,
   options,
-  placeholder = '请选择',
-  className = '',
-  id,
-  name
+  className
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    console.log('Select value changed:', e.target.value);
-    onChange(e.target.value);
-  };
-
   return (
-    <select
-      id={id}
-      name={name}
-      value={value}
-      onChange={handleChange}
-      className={`w-full px-3 py-2 rounded-md border border-[#e5e5e5] bg-white text-[#333333] focus:outline-none focus:border-[#007AFF] focus:ring-1 focus:ring-[#007AFF] ${className}`}
-      aria-label={placeholder}
-    >
-      {!value && (
-        <option value="" disabled>
-          {placeholder}
-        </option>
-      )}
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <div className="relative">
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`
+          appearance-none w-full px-4 py-3
+          bg-[#f5f5f7] text-[#1d1d1f]
+          rounded-xl border-0
+          focus:ring-2 focus:ring-[#0071e3]
+          cursor-pointer
+          transition-all duration-200
+          ${className || ''}
+        `}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg 
+          className="w-4 h-4 text-[#86868b]" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M19 9l-7 7-7-7" 
+          />
+        </svg>
+      </div>
+    </div>
   );
 };
 

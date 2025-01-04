@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, PropsWithChildren } from 'react';
+import React, { useState, useRef } from 'react';
 import { azureVoiceService } from '../services/AzureVoiceService';
 import Toast from './Toast';
 import Loading from './Loading';
@@ -6,14 +6,13 @@ import Select from './Select';
 import type { VoiceInfo } from 'microsoft-cognitiveservices-speech-sdk';
 import Settings from './Settings';
 
-const Content: React.FC<PropsWithChildren<{ className?: string }>> = ({ className, children }) => {
+const Content: React.FC<{ className?: string }> = ({ className }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [text, setText] = useState('');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [voices, setVoices] = useState<VoiceInfo[]>([]);
   const [selectedVoice, setSelectedVoice] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [settings, setSettings] = useState({
     pitch: 1,
@@ -22,7 +21,7 @@ const Content: React.FC<PropsWithChildren<{ className?: string }>> = ({ classNam
   });
 
   // 加载可用的语音列表
-  useEffect(() => {
+  React.useEffect(() => {
     const loadVoices = async () => {
       try {
         setIsProcessing(true);
@@ -31,15 +30,12 @@ const Content: React.FC<PropsWithChildren<{ className?: string }>> = ({ classNam
         const chineseVoices = voiceList.filter(voice => 
           voice.locale.startsWith('zh-')
         );
-        console.log('Chinese voices:', chineseVoices);
         setVoices(chineseVoices);
         
         // 设置默认语音
         if (chineseVoices.length > 0) {
-          const defaultVoice = chineseVoices[0];
-          console.log('Setting default voice:', defaultVoice);
-          setSelectedVoice(defaultVoice.name);
-          azureVoiceService.setVoice(defaultVoice.name);
+          setSelectedVoice(chineseVoices[0].name);
+          azureVoiceService.setVoice(chineseVoices[0].name);
         }
       } catch (error) {
         console.error('获取语音列表失败:', error);
@@ -52,241 +48,130 @@ const Content: React.FC<PropsWithChildren<{ className?: string }>> = ({ classNam
     loadVoices();
   }, []);
 
-  // 验证音频文件
-  const validateAudioFile = (file: File): boolean => {
-    const validTypes = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/ogg'];
-    if (!validTypes.includes(file.type)) {
-      setError('请选择有效的音频文件 (WAV, MP3, OGG)');
-      return false;
-    }
-    if (file.size > 10 * 1024 * 1024) { // 10MB
-      setError('文件大小不能超过 10MB');
-      return false;
-    }
-    return true;
-  };
-
-  const handleFileSelect = async (file: File) => {
-    if (!validateAudioFile(file)) return;
-    
-    try {
-      setIsProcessing(true);
-      const recognizedText = await azureVoiceService.speechToText(file);
-      setText(recognizedText);
-    } catch (error: unknown) {
-      console.error('语音识别失败:', error);
-      setError(error instanceof Error ? error.message : '语音识别失败，请重试');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      await handleFileSelect(file);
-    }
-  };
-
-  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await handleFileSelect(file);
-    }
-  };
-
-  const handleVoiceChange = (voiceName: string) => {
-    if (!voiceName) return;
-    console.log('Changing voice to:', voiceName);
-    setSelectedVoice(voiceName);
-    azureVoiceService.setVoice(voiceName);
-  };
-
+  // 处理文字转语音
   const handleTextToSpeech = async () => {
-    if (!text) return;
-    
     try {
+      if (!text.trim()) {
+        setError('请输入要转换的文本');
+        return;
+      }
+
       setIsProcessing(true);
-      console.log('Converting text to speech:', text);
-      console.log('Selected voice:', selectedVoice);
-      
+      setError(null);
+
+      // 更新语音设置
+      azureVoiceService.setSettings(settings);
+
+      // 执行转换
       const audioData = await azureVoiceService.textToSpeech(text);
+      
+      // 创建音频 URL
       const blob = new Blob([audioData], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      
+      // 更新音频源
+      setAudioUrl(url);
+
+      // 如果存在旧的音频 URL，释放它
       if (audioUrl) {
         URL.revokeObjectURL(audioUrl);
       }
-      const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
-      
-      if (audioRef.current) {
-        audioRef.current.load(); // 重新加载音频
-        audioRef.current.play();
-      }
+
     } catch (error) {
-      console.error('语音合成失败:', error);
-      setError('语音合成失败，请重试');
+      console.error('转换失败:', error);
+      setError(error instanceof Error ? error.message : '转换失败');
     } finally {
       setIsProcessing(false);
     }
   };
-
-  // 处理设置变更
-  const handleSettingsChange = (key: keyof typeof settings, value: number) => {
-    const newSettings = { ...settings, [key]: value };
-    setSettings(newSettings);
-    azureVoiceService.setSettings(newSettings);
-  };
-
-  // 在组件卸载时清理 URL
-  useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
-
-  // 在 useEffect 中添加配置检查
-  useEffect(() => {
-    const checkConfig = async () => {
-      try {
-        // 测试语音服务连接
-        const voices = await azureVoiceService.getVoices();
-        if (!voices || voices.length === 0) {
-          throw new Error('No voices available');
-        }
-        console.log('Azure service connection test successful');
-      } catch (error) {
-        console.error('Azure service connection test failed:', error);
-        setError('Azure 服务连接失败，请检查配置');
-      }
-    };
-
-    checkConfig();
-  }, []);
 
   return (
-    <div className={`p-6 relative ${className}`}>
-      {isProcessing && <Loading />}
-      {error && (
-        <Toast
-          message={error}
-          type="error"
-          onClose={() => setError(null)}
-        />
-      )}
-      
-      <div className="max-w-4xl mx-auto space-y-4">
-        {/* 设置面板 */}
-        <Settings
-          {...settings}
-          onPitchChange={(value) => handleSettingsChange('pitch', value)}
-          onRateChange={(value) => handleSettingsChange('rate', value)}
-          onVolumeChange={(value) => handleSettingsChange('volume', value)}
-        />
+    <div className="min-h-screen bg-[#f5f5f7]">
+      <div className={`max-w-3xl mx-auto p-8 ${className || ''}`}>
+        {/* 标题区域 */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-medium text-[#1d1d1f] mb-2">晓鸥能源语音助手</h1>
+          <p className="text-[#86868b]">将文字转换为自然的语音</p>
+        </div>
 
-        {/* 主要内容面板 */}
-        <form 
-          className="bg-white rounded-lg shadow-sm border border-[#e5e5e5] p-6"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          <div className="space-y-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
             {/* 语音选择 */}
-            <div className="flex items-center space-x-2">
-              <label htmlFor="voice-select" className="text-sm text-[#666666]">
-                选择语音：
+            <div className="space-y-3">
+              <label htmlFor="voice-select" className="block text-sm font-medium text-[#1d1d1f]">
+                选择语音
               </label>
               <Select
                 id="voice-select"
-                name="voice-select"
                 value={selectedVoice}
-                onChange={handleVoiceChange}
+                onChange={(value) => {
+                  setSelectedVoice(value);
+                  azureVoiceService.setVoice(value);
+                }}
                 options={voices.map(voice => ({
                   value: voice.name,
                   label: `${voice.localName || voice.name} (${voice.locale})`
                 }))}
-                placeholder="请选择语音"
-                className="flex-1"
+                className="w-full bg-[#f5f5f7] border-0 rounded-xl focus:ring-2 focus:ring-[#0071e3]"
               />
             </div>
 
-            {/* 拖放区域 */}
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="拖放音频文件或点击选择文件"
-              className="flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-[#e5e5e5] rounded-lg bg-[#fafafa] hover:bg-[#f5f5f5] transition-colors"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  fileInputRef.current?.click();
-                }
-              }}
-            >
-              <p className="text-[#666666]">
-                {isProcessing ? '处理中...' : '拖放音频文件到这里，或点击选择文件'}
-              </p>
-              <p className="text-[#999999] text-sm mt-1">
-                支持的格式：WAV, MP3, OGG (最大 10MB)
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                id="audio-file"
-                name="audio-file"
-                accept="audio/wav,audio/mp3,audio/mpeg,audio/ogg"
-                onChange={handleFileInput}
-                className="hidden"
-                aria-label="选择音频文件"
-              />
-              <button
-                type="button"
-                className="mt-4 px-6 py-2 bg-[#007AFF] text-white rounded-md hover:bg-[#0066FF] transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isProcessing}
-              >
-                选择文件
-              </button>
-            </div>
+            {/* 语音设置 */}
+            <Settings
+              pitch={settings.pitch}
+              rate={settings.rate}
+              volume={settings.volume}
+              onPitchChange={(value) => setSettings(prev => ({ ...prev, pitch: value }))}
+              onRateChange={(value) => setSettings(prev => ({ ...prev, rate: value }))}
+              onVolumeChange={(value) => setSettings(prev => ({ ...prev, volume: value }))}
+            />
 
             {/* 文本区域 */}
-            <div className="space-y-2">
-              <label htmlFor="text-input" className="sr-only">文本输入</label>
+            <div className="space-y-4">
               <textarea
                 id="text-input"
                 name="text-input"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="w-full h-32 p-3 rounded-md border border-[#e5e5e5] bg-white text-[#333333] focus:outline-none focus:border-[#007AFF] focus:ring-1 focus:ring-[#007AFF]"
-                placeholder="识别的文本将显示在这里..."
+                className="w-full h-40 p-4 bg-[#f5f5f7] border-0 rounded-xl text-[#1d1d1f] 
+                          placeholder-[#86868b] resize-none focus:ring-2 focus:ring-[#0071e3]
+                          transition-all duration-200"
+                placeholder="请输入要转换的文本..."
               />
               <button
                 type="button"
-                className="w-full py-2 bg-[#007AFF] text-white rounded-md hover:bg-[#0066FF] transition-colors disabled:opacity-50 disabled:hover:bg-[#007AFF]"
+                className="w-full py-3 px-6 bg-[#0071e3] text-white rounded-xl font-medium
+                         hover:bg-[#0077ED] active:bg-[#006EDB] disabled:opacity-50
+                         transition-all duration-200 transform hover:scale-[1.02]
+                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0071e3]"
                 onClick={handleTextToSpeech}
                 disabled={!text || isProcessing}
               >
-                转换为语音
+                {isProcessing ? '正在转换...' : '转换为语音'}
               </button>
             </div>
 
             {/* 音频播放器 */}
             {audioUrl && (
-              <div className="flex items-center justify-between p-4 bg-[#fafafa] rounded-lg border border-[#e5e5e5]">
+              <div className="mt-6 p-6 bg-[#f5f5f7] rounded-xl">
                 <audio 
                   ref={audioRef} 
                   src={audioUrl} 
                   controls 
-                  className="w-full"
+                  className="w-full focus:outline-none"
                   title="合成的语音"
                 />
               </div>
             )}
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
+
+      {/* 加载指示器 */}
+      {isProcessing && <Loading />}
+
+      {/* 错误提示 */}
+      {error && <Toast message={error} onClose={() => setError(null)} />}
     </div>
   );
 };

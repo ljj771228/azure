@@ -5,53 +5,43 @@
 ## 功能特点
 
 ### 核心功能
-- 语音转文字 (Speech-to-Text)
-  - 实时语音识别
-  - 音频文件转写
-  - 多语言支持
-  
 - 文字转语音 (Text-to-Speech)
   - 自然声音合成
   - 多种声音选择
   - 语速和音调调节
-  
-- 语音翻译 (Speech Translation)
-  - 实时语音翻译
-  - 支持多国语言互译
-  
+
 ### 特色功能
 - 简洁优雅的用户界面
-- 拖拽式文件处理
 - 快捷键支持
 - 历史记录管理
 - 云端同步
 - 黑暗模式支持
 
-## 技术架构
+## 环境配置
 
-- 前端框架：Electron + React
-- UI 组件：采用类似 macOS 设计风格的组件库
-- 后端服务：Azure Cognitive Services
-- 数据存储：本地 SQLite + Azure Cloud Storage
+1. 复制 `.env.example` 为 `.env`
+2. 在 `.env` 中填入你的 Azure 配置：
+   ```
+   VITE_AZURE_REGION=eastasia
+   VITE_AZURE_SUBSCRIPTION_KEY=your_subscription_key_here
+   ```
 
-## 界面预览
+## 开发
 
-[预留界面截图位置]
+1. 安装依赖：
+   ```bash
+   npm install
+   ```
 
-## 开发路线图
+2. 启动开发服务器：
+   ```bash
+   npm run dev
+   ```
 
-### 第一阶段 (v1.0)
-- [ ] 基础界面框架搭建
-- [ ] 语音转文字核心功能
-- [ ] 文字转语音核心功能
-- [ ] Azure 服务集成
+3. 打开浏览器访问：http://localhost:3000
 
-### 第二阶段 (v1.1)
-- [ ] 语音翻译功能
-- [ ] 历史记录管理
-- [ ] 个性化设置
+## 故障排除
 
-### 第三阶段 (v1.2)
-- [ ] 云端同步
-- [ ] 快捷键支持
-- [ ] 性能优化 
+1. 检查浏览器控制台（F12）是否有错误信息
+2. 确认 .env 文件中的配置是否正确
+3. 检查网络连接是否正常 

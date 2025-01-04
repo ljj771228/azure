@@ -1,15 +1,13 @@
 import React from 'react';
 
-interface LoadingProps {
-  text?: string;
-}
-
-const Loading: React.FC<LoadingProps> = ({ text = '处理中...' }) => {
+const Loading: React.FC = () => {
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-      <div className="bg-white p-4 rounded-lg shadow-lg text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-        <p className="mt-2 text-gray-600">{text}</p>
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white/90 rounded-2xl p-6 shadow-xl">
+        <div className="flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0071e3] border-t-transparent"></div>
+          <span className="text-[#1d1d1f] font-medium">正在处理...</span>
+        </div>
       </div>
     </div>
   );

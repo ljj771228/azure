@@ -1,10 +1,6 @@
 import { azureConfig } from '../config/azure';
 import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
 
-interface SpeechRecognitionResult {
-  text: string;
-}
-
 interface SpeechSynthesisResult {
   audioData: ArrayBuffer;
   audioDuration?: number;
@@ -30,11 +26,17 @@ class AzureVoiceService {
 
   constructor() {
     try {
+      // 验证配置
       if (!azureConfig.subscriptionKey || !azureConfig.region) {
-        throw new Error('Azure configuration is incomplete. Please check your .env file.');
+        throw new Error('Azure configuration is missing. Please check your .env file.');
       }
 
-      // 创建语音配置
+      console.log('Initializing Azure Speech Service with:', {
+        region: azureConfig.region,
+        hasKey: !!azureConfig.subscriptionKey,
+        defaultVoice: azureConfig.defaultVoice
+      });
+
       this.speechConfig = sdk.SpeechConfig.fromSubscription(
         azureConfig.subscriptionKey,
         azureConfig.region
@@ -88,7 +90,7 @@ class AzureVoiceService {
         region: azureConfig.region,
         outputFormat: this.speechConfig.outputFormat
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to initialize Azure Speech Service:', error);
       throw error;
     }
@@ -108,61 +110,6 @@ class AzureVoiceService {
       console.error('Failed to set voice:', error);
       throw new Error('设置语音失败');
     }
-  }
-
-  // 语音转文字（支持更多音频格式）
-  async speechToText(audioFile: File): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      try {
-        console.log('Starting speech recognition for file:', audioFile.name);
-        
-        const reader = new FileReader();
-        reader.onload = async (e: ProgressEvent<FileReader>) => {
-          if (!e.target?.result) {
-            reject(new Error('Failed to read file'));
-            return;
-          }
-
-          const arrayBuffer = e.target.result as ArrayBuffer;
-          const audioData = new Uint8Array(arrayBuffer);
-          
-          const pushStream = sdk.AudioInputStream.createPushStream();
-          pushStream.write(audioData);
-          pushStream.close();
-          
-          const audioConfig = sdk.AudioConfig.fromStreamInput(pushStream);
-          const recognizer = new sdk.SpeechRecognizer(this.speechConfig, audioConfig);
-
-          recognizer.recognized = (s: unknown, e: { result: { text: string } }) => {
-            console.log('Recognition result:', e.result.text);
-          };
-
-          recognizer.recognizeOnceAsync(
-            (result: { text: string }) => {
-              console.log('Recognition completed:', result.text);
-              resolve(result.text);
-              recognizer.close();
-            },
-            (error: Error) => {
-              console.error('Recognition failed:', error);
-              reject(error);
-              recognizer.close();
-            }
-          );
-        };
-        
-        reader.onerror = () => {
-          const error = new Error('File reading failed');
-          console.error(error);
-          reject(error);
-        };
-        
-        reader.readAsArrayBuffer(audioFile);
-      } catch (error) {
-        console.error('Failed to start recognition:', error);
-        reject(error);
-      }
-    });
   }
 
   // 设置语音参数

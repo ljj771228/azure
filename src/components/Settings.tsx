@@ -9,7 +9,7 @@ interface SettingsProps {
   onVolumeChange: (value: number) => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({
+export const Settings: React.FC<SettingsProps> = ({
   pitch,
   rate,
   volume,
@@ -18,81 +18,103 @@ const Settings: React.FC<SettingsProps> = ({
   onVolumeChange
 }) => {
   return (
-    <form 
-      className="space-y-4 p-4 bg-[#fafafa] rounded-lg border border-[#e5e5e5]"
-      onSubmit={(e) => e.preventDefault()}
-    >
-      <h3 className="text-sm font-semibold text-[#666666]" id="settings-title">语音设置</h3>
-      
-      {/* 音调设置 */}
-      <div className="space-y-1" role="group" aria-labelledby="pitch-label">
-        <div className="flex items-center justify-between">
-          <label id="pitch-label" htmlFor="pitch-input" className="text-sm text-[#666666]">
-            音调
-          </label>
-          <span className="text-sm text-[#999999]" aria-label={`当前音调值：${pitch}`}>
-            {pitch}
-          </span>
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium text-[#1d1d1f]">语音设置</h3>
+      <div className="grid gap-6">
+        {/* 音调设置 */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label htmlFor="pitch" className="text-sm font-medium text-[#1d1d1f]">
+              音调
+            </label>
+            <span className="text-sm text-[#86868b]">{pitch.toFixed(1)}</span>
+          </div>
+          <input
+            type="range"
+            id="pitch"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={pitch}
+            onChange={(e) => onPitchChange(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[#d2d2d7] rounded-full appearance-none cursor-pointer
+                     focus:outline-none focus:ring-2 focus:ring-[#0071e3]
+                     [&::-webkit-slider-thumb]:appearance-none
+                     [&::-webkit-slider-thumb]:w-5
+                     [&::-webkit-slider-thumb]:h-5
+                     [&::-webkit-slider-thumb]:bg-white
+                     [&::-webkit-slider-thumb]:border-2
+                     [&::-webkit-slider-thumb]:border-[#0071e3]
+                     [&::-webkit-slider-thumb]:rounded-full
+                     [&::-webkit-slider-thumb]:shadow-md
+                     [&::-webkit-slider-thumb]:transition-all
+                     [&::-webkit-slider-thumb]:duration-200"
+          />
         </div>
-        <input
-          id="pitch-input"
-          type="range"
-          min="0.5"
-          max="2"
-          step="0.1"
-          value={pitch}
-          onChange={(e) => onPitchChange(parseFloat(e.target.value))}
-          className="w-full accent-azure"
-          aria-labelledby="pitch-label"
-        />
-      </div>
 
-      {/* 语速设置 */}
-      <div className="space-y-1" role="group" aria-labelledby="rate-label">
-        <div className="flex items-center justify-between">
-          <label id="rate-label" htmlFor="rate-input" className="text-sm text-[#666666]">
-            语速
-          </label>
-          <span className="text-sm text-[#999999]" aria-label={`当前语速值：${rate}`}>
-            {rate}
-          </span>
+        {/* 语速设置 */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label htmlFor="rate" className="text-sm font-medium text-[#1d1d1f]">
+              语速
+            </label>
+            <span className="text-sm text-[#86868b]">{rate.toFixed(1)}</span>
+          </div>
+          <input
+            type="range"
+            id="rate"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value={rate}
+            onChange={(e) => onRateChange(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[#d2d2d7] rounded-full appearance-none cursor-pointer
+                     focus:outline-none focus:ring-2 focus:ring-[#0071e3]
+                     [&::-webkit-slider-thumb]:appearance-none
+                     [&::-webkit-slider-thumb]:w-5
+                     [&::-webkit-slider-thumb]:h-5
+                     [&::-webkit-slider-thumb]:bg-white
+                     [&::-webkit-slider-thumb]:border-2
+                     [&::-webkit-slider-thumb]:border-[#0071e3]
+                     [&::-webkit-slider-thumb]:rounded-full
+                     [&::-webkit-slider-thumb]:shadow-md
+                     [&::-webkit-slider-thumb]:transition-all
+                     [&::-webkit-slider-thumb]:duration-200"
+          />
         </div>
-        <input
-          id="rate-input"
-          type="range"
-          min="0.5"
-          max="2"
-          step="0.1"
-          value={rate}
-          onChange={(e) => onRateChange(parseFloat(e.target.value))}
-          className="w-full accent-azure"
-          aria-labelledby="rate-label"
-        />
-      </div>
 
-      {/* 音量设置 */}
-      <div className="space-y-1" role="group" aria-labelledby="volume-label">
-        <div className="flex items-center justify-between">
-          <label id="volume-label" htmlFor="volume-input" className="text-sm text-[#666666]">
-            音量
-          </label>
-          <span className="text-sm text-[#999999]" aria-label={`当前音量值：${volume}`}>
-            {volume}
-          </span>
+        {/* 音量设置 */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label htmlFor="volume" className="text-sm font-medium text-[#1d1d1f]">
+              音量
+            </label>
+            <span className="text-sm text-[#86868b]">{(volume * 100).toFixed(0)}%</span>
+          </div>
+          <input
+            type="range"
+            id="volume"
+            min="0"
+            max="1"
+            step="0.1"
+            value={volume}
+            onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
+            className="w-full h-2 bg-[#d2d2d7] rounded-full appearance-none cursor-pointer
+                     focus:outline-none focus:ring-2 focus:ring-[#0071e3]
+                     [&::-webkit-slider-thumb]:appearance-none
+                     [&::-webkit-slider-thumb]:w-5
+                     [&::-webkit-slider-thumb]:h-5
+                     [&::-webkit-slider-thumb]:bg-white
+                     [&::-webkit-slider-thumb]:border-2
+                     [&::-webkit-slider-thumb]:border-[#0071e3]
+                     [&::-webkit-slider-thumb]:rounded-full
+                     [&::-webkit-slider-thumb]:shadow-md
+                     [&::-webkit-slider-thumb]:transition-all
+                     [&::-webkit-slider-thumb]:duration-200"
+          />
         </div>
-        <input
-          id="volume-input"
-          type="range"
-          min="0"
-          max="1"
-          step="0.1"
-          value={volume}
-          onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-          className="w-full accent-azure"
-          aria-labelledby="volume-label"
-        />
       </div>
-    </form>
+    </div>
   );
 };
 
