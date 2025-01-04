@@ -1,47 +1,57 @@
-# Azure Voice Assistant (Azure语音助手)
+# 晓鸥能源语音助手
 
-一款优雅简洁的 Azure 语音服务工具，采用苹果设计风格，让语音服务的使用变得简单自然。
+## 本地部署步骤
 
-## 功能特点
+1. 安装 Node.js
+   - 下载并安装 Node.js (建议版本 16+)
+   - 下载地址：https://nodejs.org/
 
-### 核心功能
-- 文字转语音 (Text-to-Speech)
-  - 自然声音合成
-  - 多种声音选择
-  - 语速和音调调节
+2. 配置环境
+   - 复制 `.env.example` 为 `.env`
+   - 在 `.env` 中填入你的 Azure 配置：
+     ```
+     VITE_AZURE_REGION=eastasia
+     VITE_AZURE_SUBSCRIPTION_KEY=你的密钥
+     ```
 
-### 特色功能
-- 简洁优雅的用户界面
-- 快捷键支持
-- 历史记录管理
-- 云端同步
-- 黑暗模式支持
-
-## 环境配置
-
-1. 复制 `.env.example` 为 `.env`
-2. 在 `.env` 中填入你的 Azure 配置：
-   ```
-   VITE_AZURE_REGION=eastasia
-   VITE_AZURE_SUBSCRIPTION_KEY=your_subscription_key_here
-   ```
-
-## 开发
-
-1. 安装依赖：
+3. 安装依赖
    ```bash
    npm install
    ```
 
-2. 启动开发服务器：
+4. 运行项目
    ```bash
+   # 开发模式
    npm run dev
+   
+   # 或者构建后运行
+   npm run build
+   npm run preview
    ```
 
-3. 打开浏览器访问：http://localhost:3000
+5. 访问应用
+   - 开发模式：http://localhost:3000
+   - 预览模式：http://localhost:4173
 
-## 故障排除
+## 常见问题
 
-1. 检查浏览器控制台（F12）是否有错误信息
-2. 确认 .env 文件中的配置是否正确
-3. 检查网络连接是否正常 
+1. 如果遇到网络问题：
+   - 确保能访问 Azure 语音服务
+   - 检查 .env 文件配置是否正确
+
+2. 如果遇到依赖安装问题：
+   - 尝试使用 `npm install --legacy-peer-deps`
+   - 或者使用离线包安装：`npm install ./xiaoou-voice-assistant.tgz` 
+
+3.在新机器上运行
+# 1. 解压部署包
+tar -xzf xiaoou-voice-assistant.tar.gz
+
+# 2. 修改 .env 中的配置
+编辑 .env 文件，填入正确的 Azure 密钥
+
+# 3. 安装依赖
+npm install
+
+# 4. 运行项目
+npm run dev
